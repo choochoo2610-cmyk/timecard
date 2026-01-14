@@ -1,54 +1,87 @@
 // ===== データ =====
 let data = JSON.parse(localStorage.getItem("timecard-data") || "[]");
 
-// ===== DOM =====
-const userName = document.getElementById("userName");
-const userWage = document.getElementById("userWage");
-const userSelect = document.getElementById("userSelect");
-const monthSelect = document.getElementById("monthSelect");
-const records = document.getElementById("records");
-const summary = document.getElementById("summary");
-const history = document.getElementById("history");
-const dateInput = document.getElementById("date");
-const startInput = document.getElementById("start");
-const endInput = document.getElementById("end");
-const breakTime = document.getElementById("breakTime");
-const memo = document.getElementById("memo");
-const viewUrl = document.getElementById("viewUrl");
+// ===== DOM取得（null防止）=====
+const $ = id => document.getElementById(id);
 
-// ===== 共通 =====
+const userName = $("userName");
+const userWage = $("userWage");
+const userSelect = $("userSelect");
+const records = $("records");
+const summary = $("summary");
+const monthlySummary = $("monthlySummary");
+
+const dateInput = $("date");
+const startInput = $("start");
+const endInput = $("end");
+const breakInput = $("breakTime");
+const memoInput = $("memo");
+
+// ===== 保存 =====
 function save() {
   localStorage.setItem("timecard-data", JSON.stringify(data));
 }
 
-function getUser(id = userSelect.value) {
-  return data.find(u => String(u.id) === String(id));
-}
-
+// ===== 共通 =====
 function toMin(t) {
+  if (!t) return 0;
   const [h, m] = t.split(":").map(Number);
   return h * 60 + m;
+}
+
+function getUser() {
+  return data.find(u => String(u.id) === userSelect.value);
+}
+
+// ===== 20日締め =====
+function getClosingPeriod() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth();
+  const d = now.getDate();
+
+  let start, end, labelYear, labelMonth;
+
+  if (d <= 20) {
+    start = new Date(y, m - 1, 21);
+    end = new Date(y, m, 20);
+    labelYear = y;
+    labelMonth = m + 1;
+  } else {
+    start = new Date(y, m, 21);
+    end = new Date(y, m + 1, 20);
+    labelYear = m === 11 ? y + 1 : y;
+    labelMonth = m === 11 ? 1 : m + 2;
+  }
+
+  return {
+    start,
+    end,
+    label: `${labelYear}-${String(labelMonth).padStart(2, "0")}`
+  };
+}
+
+function isInPeriod(dateStr, start, end) {
+  if (!dateStr) return false;
+  const d = new Date(dateStr);
+  return d >= start && d <= end;
 }
 
 // ===== 人 =====
 function addUser() {
   if (!userName.value || !userWage.value) return;
 
-  const newUser = {
+  data.push({
     id: Date.now(),
     name: userName.value,
     wage: Number(userWage.value),
-    records: [],
-    history: []
-  };
-
-  data.push(newUser);
+    records: []
+  });
 
   userName.value = "";
   userWage.value = "";
-
   save();
-  render(newUser.id); // ★ 追加した人を選択
+  render();
 }
 
 function editUser() {
@@ -58,11 +91,11 @@ function editUser() {
   const name = prompt("名前", u.name);
   const wage = prompt("時給", u.wage);
 
-  if (name) u.name = name;
-  if (wage) u.wage = Number(wage);
+  if (name !== null && name !== "") u.name = name;
+  if (wage !== null && wage !== "") u.wage = Number(wage);
 
   save();
-  render(u.id);
+  render();
 }
 
 function deleteUser() {
@@ -72,66 +105,62 @@ function deleteUser() {
 
   data = data.filter(x => x.id !== u.id);
   save();
-  render(data[0]?.id); // ★ 残っている人
+  render();
 }
 
 // ===== 勤務 =====
 function addRecord() {
   const u = getUser();
   if (!u) return;
-
   if (!dateInput.value || !startInput.value || !endInput.value) return;
 
   u.records.push({
     date: dateInput.value,
     start: startInput.value,
     end: endInput.value,
-    break: Number(breakTime.value) || 0,
-    memo: memo.value || ""
+    break: Number(breakInput.value) || 0,
+    memo: memoInput.value || ""
   });
 
-  memo.value = "";
   save();
-  render(u.id); // ★ 人を固定
+  render();
 }
 
-function deleteRecord(i) {
+function deleteRecord(index) {
   const u = getUser();
   if (!u) return;
 
-  u.records.splice(i, 1);
+  u.records.splice(index, 1);
   save();
-  render(u.id);
+  render();
 }
 
 // ===== 描画 =====
-function render(selectedId = userSelect.value) {
-  // select 再生成
-  userSelect.innerHTML = data
-    .map(u => `<option value="${u.id}">${u.name}</option>`)
-    .join("");
-
-  if (selectedId && getUser(selectedId)) {
-    userSelect.value = selectedId;
-  }
+function render() {
+  userSelect.innerHTML = "";
+  data.forEach(u => {
+    const opt = document.createElement("option");
+    opt.value = u.id;
+    opt.textContent = u.name;
+    userSelect.appendChild(opt);
+  });
 
   const u = getUser();
   if (!u) {
     records.innerHTML = "";
-    summary.innerText = "";
-    history.innerHTML = "";
-    viewUrl.innerText = "";
+    summary.textContent = "";
+    monthlySummary.innerHTML = "";
     return;
   }
 
-  let totalMin = 0;
-  const month = monthSelect.value;
+  const { start, end, label } = getClosingPeriod();
 
+  let totalMin = 0;
   records.innerHTML =
-    "<tr><th>日付</th><th>時間</th><th>休憩</th><th>メモ</th><th></th></tr>";
+    "<tr><th>日付</th><th>時間</th><th>休憩</th><th></th></tr>";
 
   u.records.forEach((r, i) => {
-    if (month && !r.date.startsWith(month)) return;
+    if (!isInPeriod(r.date, start, end)) return;
 
     const work =
       Math.max(0, toMin(r.end) - toMin(r.start) - (r.break || 0));
@@ -141,34 +170,47 @@ function render(selectedId = userSelect.value) {
       <tr>
         <td>${r.date}</td>
         <td>${r.start}〜${r.end}</td>
-        <td>${r.break}分</td>
-        <td>${r.memo}</td>
+        <td>${r.break}</td>
         <td><button onclick="deleteRecord(${i})">削除</button></td>
-      </tr>
-    `;
+      </tr>`;
   });
 
-  summary.innerText = `合計 ${(totalMin / 60).toFixed(2)} 時間`;
+  const hours = totalMin / 60;
+  const money = Math.floor(hours * u.wage);
 
-  const baseUrl =
-    location.origin + location.pathname.replace(/\/[^/]*$/, "/");
-  viewUrl.innerText = `${baseUrl}view.html?user=${u.id}`;
+  summary.textContent =
+    `${label}（20日締め） 合計 ${hours.toFixed(2)} 時間 / ¥${money.toLocaleString()}`;
+
+  renderMonthlySummary();
 }
 
-// ===== 月1回確定 =====
-function finalizeMonth() {
-  if (!confirm("今月分を確定しますか？")) return;
+// ===== 人別給与 =====
+function renderMonthlySummary() {
+  monthlySummary.innerHTML = "";
+  const { start, end } = getClosingPeriod();
 
-  const blob = new Blob(
-    [JSON.stringify(data, null, 2)],
-    { type: "application/json" }
-  );
+  data.forEach(u => {
+    let min = 0;
 
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "timecard.json";
-  a.click();
+    u.records.forEach(r => {
+      if (!isInPeriod(r.date, start, end)) return;
+      min += Math.max(0, toMin(r.end) - toMin(r.start) - (r.break || 0));
+    });
+
+    const h = min / 60;
+    const m = Math.floor(h * u.wage);
+
+    const div = document.createElement("div");
+    div.textContent = `${u.name}：${h.toFixed(2)} 時間 / ¥${m.toLocaleString()}`;
+    monthlySummary.appendChild(div);
+  });
 }
 
-// ===== 初期化 =====
-window.onload = () => render();
+// ===== イベント =====
+$("addUserBtn").onclick = addUser;
+$("editUserBtn").onclick = editUser;
+$("deleteUserBtn").onclick = deleteUser;
+$("addRecordBtn").onclick = addRecord;
+userSelect.onchange = render;
+
+window.onload = render;
