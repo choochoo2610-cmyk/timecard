@@ -8,6 +8,7 @@ const userSelect = document.getElementById("userSelect");
 const monthSelect = document.getElementById("monthSelect");
 const records = document.getElementById("records");
 const summary = document.getElementById("summary");
+const history = document.getElementById("history");
 const dateInput = document.getElementById("date");
 const startInput = document.getElementById("start");
 const endInput = document.getElementById("end");
@@ -20,45 +21,48 @@ function save() {
   localStorage.setItem("timecard-data", JSON.stringify(data));
 }
 
-function getUser() {
-  return data.find(u => String(u.id) === userSelect.value);
+function getUser(id = userSelect.value) {
+  return data.find(u => String(u.id) === String(id));
 }
 
 function toMin(t) {
-  if (!t) return 0;
   const [h, m] = t.split(":").map(Number);
   return h * 60 + m;
 }
 
-// ===== 人管理 =====
+// ===== 人 =====
 function addUser() {
   if (!userName.value || !userWage.value) return;
 
-  data.push({
+  const newUser = {
     id: Date.now(),
     name: userName.value,
     wage: Number(userWage.value),
     records: [],
-    fixedMonths: {}
-  });
+    history: []
+  };
+
+  data.push(newUser);
 
   userName.value = "";
   userWage.value = "";
+
   save();
-  render();
+  render(newUser.id); // ★ 追加した人を選択
 }
 
 function editUser() {
   const u = getUser();
   if (!u) return;
 
-  const n = prompt("名前", u.name);
-  const w = prompt("時給", u.wage);
-  if (n) u.name = n;
-  if (w) u.wage = Number(w);
+  const name = prompt("名前", u.name);
+  const wage = prompt("時給", u.wage);
+
+  if (name) u.name = name;
+  if (wage) u.wage = Number(wage);
 
   save();
-  render();
+  render(u.id);
 }
 
 function deleteUser() {
@@ -68,13 +72,14 @@ function deleteUser() {
 
   data = data.filter(x => x.id !== u.id);
   save();
-  render();
+  render(data[0]?.id); // ★ 残っている人
 }
 
 // ===== 勤務 =====
 function addRecord() {
   const u = getUser();
   if (!u) return;
+
   if (!dateInput.value || !startInput.value || !endInput.value) return;
 
   u.records.push({
@@ -85,30 +90,28 @@ function addRecord() {
     memo: memo.value || ""
   });
 
+  memo.value = "";
   save();
-  render();
+  render(u.id); // ★ 人を固定
 }
 
 function deleteRecord(i) {
   const u = getUser();
   if (!u) return;
+
   u.records.splice(i, 1);
   save();
-  render();
+  render(u.id);
 }
 
 // ===== 描画 =====
-function render() {
-  // ★ 今選ばれている人を保持
-  const selectedId = userSelect.value;
-
-  // ★ select を作り直す
+function render(selectedId = userSelect.value) {
+  // select 再生成
   userSelect.innerHTML = data
     .map(u => `<option value="${u.id}">${u.name}</option>`)
     .join("");
 
-  // ★ さっき選んでた人がいれば戻す
-  if (selectedId && data.some(u => String(u.id) === selectedId)) {
+  if (selectedId && getUser(selectedId)) {
     userSelect.value = selectedId;
   }
 
@@ -152,27 +155,15 @@ function render() {
   viewUrl.innerText = `${baseUrl}view.html?user=${u.id}`;
 }
 
-
 // ===== 月1回確定 =====
 function finalizeMonth() {
-  const u = getUser();
-  if (!u) return;
-
-  const month = monthSelect.value;
-  if (!month) {
-    alert("月を選択してください");
-    return;
-  }
-
-  if (!confirm(`${month} を確定しますか？`)) return;
-
-  u.fixedMonths[month] = true;
-  save();
+  if (!confirm("今月分を確定しますか？")) return;
 
   const blob = new Blob(
     [JSON.stringify(data, null, 2)],
     { type: "application/json" }
   );
+
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = "timecard.json";
@@ -180,4 +171,4 @@ function finalizeMonth() {
 }
 
 // ===== 初期化 =====
-window.onload = render;
+window.onload = () => render();
