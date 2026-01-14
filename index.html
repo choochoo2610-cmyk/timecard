@@ -2,65 +2,66 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>Timecard Café</title>
+  <title>タイムカード管理</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
+
+  <!-- PDF用（cdn / GitHub Pages対応） -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
-<div class="card">
-  <h1>☕ Timecard Café</h1>
+<h1>☕ タイムカード管理</h1>
 
-  <section>
-    <h2>スタッフ追加</h2>
-    <input id="userName" placeholder="名前">
-    <input id="userWage" type="number" placeholder="時給">
-    <button onclick="addUser()">追加</button>
-  </section>
+<section>
+  <h2>スタッフ追加</h2>
+  <input id="userName" placeholder="名前">
+  <input id="userWage" type="number" placeholder="時給">
+  <button onclick="addUser()">追加</button>
+</section>
 
-  <section>
-    <h2>スタッフ選択</h2>
-    <select id="userSelect" onchange="render()"></select>
-    <button onclick="editUser()">編集</button>
-    <button class="danger" onclick="deleteUser()">削除</button>
-  </section>
+<section>
+  <h2>スタッフ選択</h2>
+  <select id="userSelect" onchange="render()"></select>
+  <button onclick="editUser()">編集</button>
+  <button onclick="deleteUser()">削除</button>
+</section>
 
-  <section>
-    <h2>締め月（20日締め）</h2>
-    <input type="month" id="monthSelect" onchange="render()">
-  </section>
+<section>
+  <h2>締め月（20日締め）</h2>
+  <input type="month" id="monthSelect" onchange="render()">
+</section>
 
-  <section>
-    <h2>勤務入力 / 編集</h2>
-    <input type="date" id="date">
-    <input type="time" id="start">
-    <input type="time" id="end">
-    <input type="number" id="breakTime" value="0"> 分
-    <input id="memo" placeholder="メモ">
+<section>
+  <h2>勤務入力</h2>
+  <input type="date" id="date">
+  <input type="time" id="start">
+  <input type="time" id="end">
+  <input type="number" id="breakTime" placeholder="休憩(分)">
+  <input id="memo" placeholder="メモ">
+  <button onclick="addRecord()">保存</button>
+</section>
 
-    <div class="row">
-      <button onclick="saveRecord()">保存</button>
-      <button class="sub" onclick="cancelEdit()">キャンセル</button>
-    </div>
-  </section>
-
+<section>
   <h2>勤務一覧</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>日付</th><th>時間</th><th>休憩</th><th>メモ</th><th></th>
-      </tr>
-    </thead>
-    <tbody id="records"></tbody>
-  </table>
+  <table id="records"></table>
+</section>
 
-  <div id="summary" class="summary"></div>
+<section>
+  <h2>集計</h2>
+  <div id="summary"></div>
+</section>
 
-  <h3>閲覧用URL</h3>
-  <div id="viewUrl" class="url"></div>
+<section>
+  <h2>月次確定</h2>
+  <button onclick="fixMonth()">今月を確定</button>
+  <button onclick="exportUserMonth()">個人別PDF給与明細</button>
+</section>
 
-  <button onclick="exportData()">☕ timecard.json 出力（月1回）</button>
-</div>
+<section>
+  <h2>閲覧用URL</h2>
+  <div id="viewUrl"></div>
+</section>
 
 <script src="script.js"></script>
 </body>
