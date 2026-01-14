@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>勤務管理</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+<h2>勤務管理（入力）</h2>
+
+<h3>人の追加</h3>
+<input id="newName" placeholder="名前">
+<input id="newWage" type="number" placeholder="時給">
+<button onclick="addUser()">追加</button>
+
+<hr>
+
+<h3>勤務入力</h3>
+<select id="userSelect"></select><br><br>
+
+<input id="date" type="date">
+<input id="start" type="time">
+<input id="end" type="time">
+<input id="break" type="number" placeholder="休憩(分)">
+<button onclick="addRecord()">追加</button>
+
+<hr>
+
+<h3>今月の締め</h3>
+<input id="closeMonth" type="month">
+<button onclick="closeMonth()">締める（履歴化）</button>
+
+<hr>
+
+<h3>データ操作</h3>
+<button onclick="downloadJSON()">timecard.json を保存</button>
+
+<pre id="log"></pre>
+
+<script src="./script.js"></script>
+</body>
+</html>
