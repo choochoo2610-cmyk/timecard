@@ -5,7 +5,6 @@
   <title>勤怠管理</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
-  <link rel="icon" href="data:,">
 </head>
 <body>
 
@@ -42,20 +41,20 @@
 
 <h2>今月（20日締め）の給与一覧</h2>
 <div id="monthlySummary"></div>
+
+<section>
+  <h2>閲覧専用URL（人ごと）</h2>
+  <div id="viewUrl" style="word-break:break-all;"></div>
+  <button onclick="copyViewUrl()">URLをコピー</button>
+</section>
+
 <section>
   <h2>データ管理</h2>
   <button onclick="exportJson()">timecard.jsonを書き出し</button>
 </section>
 
-<section>
-  <h2>閲覧専用URL（人ごと）</h2>
-  <div id="viewUrl" style="word-break:break-all;">
-    スタッフを選択するとURLが表示されます
-  </div>
-  <button onclick="copyViewUrl()">URLをコピー</button>
-</section>
-
-<!-- ★ script.js は必ず1回だけ、bodyの一番下 -->
+<!-- ★ script.js はここで1回だけ -->
 <script src="script.js"></script>
+
 </body>
 </html>
