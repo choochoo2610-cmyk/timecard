@@ -1,0 +1,67 @@
+body {
+  background: #f5efe6;
+  font-family: "Hiragino Maru Gothic ProN", sans-serif;
+  padding: 16px;
+}
+
+.card {
+  max-width: 720px;
+  margin: auto;
+  background: #fffaf4;
+  padding: 20px;
+  border-radius: 14px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+h1, h2 {
+  color: #5a3e2b;
+}
+
+input, select {
+  padding: 6px;
+  margin: 4px 0;
+  width: 100%;
+}
+
+button {
+  background: #7b4f2c;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  margin-top: 6px;
+  border-radius: 8px;
+}
+
+button.sub {
+  background: #c2b0a2;
+}
+
+button.danger {
+  background: #a94442;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th, td {
+  padding: 6px;
+  border-bottom: 1px solid #ddd;
+}
+
+.summary {
+  margin-top: 12px;
+  font-weight: bold;
+}
+
+.url {
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+}
