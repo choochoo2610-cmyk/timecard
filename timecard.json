@@ -1,19 +1,24 @@
 [
   {
-    "id": 1768367666016,
+    "id": 1768370579543,
     "name": "かとう",
     "wage": 1000,
     "records": [
       {
-        "date": "2025-12-24",
-        "start": "14:14",
+        "date": "2026-01-14",
+        "start": "15:07",
         "end": "20:14",
         "break": 0,
         "memo": ""
       }
     ],
-    "fixedMonths": {
-      "2025-12": true
-    }
+    "fixedMonths": {}
+  },
+  {
+    "id": 1768370601022,
+    "name": "二村",
+    "wage": 1000,
+    "records": [],
+    "fixedMonths": {}
   }
 ]
