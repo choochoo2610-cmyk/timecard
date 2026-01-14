@@ -1,5 +1,3 @@
-localStorage.removeItem("timecard-data");
-
 // ===== データ =====
 let data = JSON.parse(localStorage.getItem("timecard-data") || "[]");
 
