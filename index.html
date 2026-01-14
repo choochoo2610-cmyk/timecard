@@ -1,58 +1,67 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<title>勤務管理</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <title>Timecard Café</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-<h2>勤務管理（入力）</h2>
 
-<h3>人の追加</h3>
-<input id="newName" placeholder="名前">
-<input id="newWage" type="number" placeholder="時給">
-<button onclick="addUser()">追加</button>
-<button onclick="deleteUser()">選択中の人を削除</button>
+<div class="card">
+  <h1>☕ Timecard Café</h1>
 
-<hr>
+  <section>
+    <h2>スタッフ追加</h2>
+    <input id="userName" placeholder="名前">
+    <input id="userWage" type="number" placeholder="時給">
+    <button onclick="addUser()">追加</button>
+  </section>
 
-<h3>勤務入力</h3>
-<select id="userSelect" onchange="renderRecords()"></select><br><br>
+  <section>
+    <h2>スタッフ選択</h2>
+    <select id="userSelect" onchange="render()"></select>
+    <button onclick="editUser()">編集</button>
+    <button class="danger" onclick="deleteUser()">削除</button>
+  </section>
 
-<input id="date" type="date">
-<input id="start" type="time">
-<input id="end" type="time">
-<input id="break" type="number" placeholder="休憩(分)">
-<button onclick="addRecord()">追加</button>
+  <section>
+    <h2>締め月（20日締め）</h2>
+    <input type="month" id="monthSelect" onchange="render()">
+  </section>
 
-<h4>勤務一覧</h4>
-<table border="1">
-<thead>
-<tr>
-<th>日付</th><th>時間</th><th>休憩</th><th>操作</th>
-</tr>
-</thead>
-<tbody id="recordList"></tbody>
-</table>
+  <section>
+    <h2>勤務入力 / 編集</h2>
+    <input type="date" id="date">
+    <input type="time" id="start">
+    <input type="time" id="end">
+    <input type="number" id="breakTime" value="0"> 分
+    <input id="memo" placeholder="メモ">
 
-<hr>
+    <div class="row">
+      <button onclick="saveRecord()">保存</button>
+      <button class="sub" onclick="cancelEdit()">キャンセル</button>
+    </div>
+  </section>
 
-<h3>今月の締め</h3>
-<input id="closeMonth" type="month">
-<button onclick="closeMonth()">締める（履歴化）</button>
+  <h2>勤務一覧</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>日付</th><th>時間</th><th>休憩</th><th>メモ</th><th></th>
+      </tr>
+    </thead>
+    <tbody id="records"></tbody>
+  </table>
 
-<hr>
+  <div id="summary" class="summary"></div>
 
-<button onclick="downloadJSON()">timecard.json 保存</button>
+  <h3>閲覧用URL</h3>
+  <div id="viewUrl" class="url"></div>
 
-<pre id="log"></pre>
+  <button onclick="exportData()">☕ timecard.json 出力（月1回）</button>
+</div>
 
-<script src="./script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
-<hr>
-
-<h3>閲覧用URL</h3>
-<button onclick="copyViewUrl()">閲覧URLをコピー</button>
-<div id="viewUrl" style="font-size:12px;word-break:break-all;"></div>
