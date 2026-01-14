@@ -63,6 +63,11 @@ function downloadPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
 
+  // 日本語フォント登録
+  doc.addFileToVFS("NotoSansJP.ttf", FONT_BASE64);
+  doc.addFont("NotoSansJP.ttf", "NotoSansJP", "normal");
+  doc.setFont("NotoSansJP");
+
   const name = document.getElementById("name").innerText;
   const month = document.getElementById("month").innerText;
   const total = document.getElementById("total").innerText;
