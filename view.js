@@ -1,22 +1,36 @@
-const p = new URLSearchParams(location.search);
-const userId = p.get("user");
-const month = p.get("month");
+const params = new URLSearchParams(location.search);
+const userId = params.get("user");
+if (!userId) {
+  document.body.innerText = "ユーザー未指定";
+  throw new Error();
+}
 
-fetch("timecard.json")
+fetch("./timecard.json")
   .then(r => r.json())
   .then(data => {
     const u = data.find(x => String(x.id) === userId);
-    if (!u) return;
+    if (!u) throw new Error();
 
-    let total = 0;
+    const now = new Date();
+    const m =
+      now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
+
+    let min = 0;
     u.records.forEach(r => {
-      if (month && !r.date.startsWith(month)) return;
-      const s = r.start.split(":");
-      const e = r.end.split(":");
-      total += (e[0]*60+ +e[1]) - (s[0]*60+ +s[1]) - (r.break||0);
+      if (!r.date.startsWith(m)) return;
+      min +=
+        Math.max(0,
+          (Number(r.end.slice(0,2))*60+Number(r.end.slice(3))) -
+          (Number(r.start.slice(0,2))*60+Number(r.start.slice(3))) -
+          (r.break || 0)
+        );
     });
 
     document.getElementById("name").innerText = u.name;
-    document.getElementById("total").innerText = (total/60).toFixed(2)+" 時間";
-    document.getElementById("month").innerText = month || "";
+    document.getElementById("month").innerText = m;
+    document.getElementById("total").innerText =
+      (min / 60).toFixed(2) + " 時間";
+  })
+  .catch(() => {
+    document.body.innerText = "データを読み込めません";
   });
