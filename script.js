@@ -178,7 +178,8 @@ function copyViewUrl() {
 
 // ===== 描画 =====
 function render() {
-  // セレクト再描画
+  const selectedId = userSelect.value; // ★今の選択を保存
+
   userSelect.innerHTML = "";
   data.forEach(u => {
     const opt = document.createElement("option");
@@ -186,6 +187,13 @@ function render() {
     opt.textContent = u.name;
     userSelect.appendChild(opt);
   });
+
+  // ★ 選択を復元（なければ最初の人）
+  if (selectedId) {
+    userSelect.value = selectedId;
+  } else if (data.length > 0) {
+    userSelect.value = data[0].id;
+  }
 
   const u = getUser();
   if (!u) {
@@ -195,6 +203,9 @@ function render() {
     renderViewUrl();
     return;
   }
+
+  // ↓ 以降は今まで通り
+
 
   const { start, end, label } = getClosingPeriod();
 
