@@ -1,26 +1,19 @@
 // ===== データ =====
 let data = JSON.parse(localStorage.getItem("timecard-data") || "[]");
 
-// ★ 既存データ救済（超重要）
-data.forEach(u => {
-  if (!u.fixedMonths) u.fixedMonths = {};
-  if (!Array.isArray(u.records)) u.records = [];
-});
-
 // ===== DOM =====
 const userName = document.getElementById("userName");
 const userWage = document.getElementById("userWage");
 const userSelect = document.getElementById("userSelect");
 const monthSelect = document.getElementById("monthSelect");
-const recordsTable = document.getElementById("records");
+const records = document.getElementById("records");
 const summary = document.getElementById("summary");
-const viewUrl = document.getElementById("viewUrl");
-
 const dateInput = document.getElementById("date");
 const startInput = document.getElementById("start");
 const endInput = document.getElementById("end");
 const breakTime = document.getElementById("breakTime");
 const memo = document.getElementById("memo");
+const viewUrl = document.getElementById("viewUrl");
 
 // ===== 共通 =====
 function save() {
@@ -37,20 +30,7 @@ function toMin(t) {
   return h * 60 + m;
 }
 
-// ===== 20日締め =====
-function inClosingMonth(dateStr, monthStr) {
-  if (!monthStr) return true;
-
-  const [y, m] = monthStr.split("-").map(Number);
-  const d = new Date(dateStr);
-
-  const start = new Date(y, m - 1, 21);
-  const end = new Date(y, m, 20);
-
-  return d >= start && d <= end;
-}
-
-// ===== 人 =====
+// ===== 人管理 =====
 function addUser() {
   if (!userName.value || !userWage.value) return;
 
@@ -64,7 +44,6 @@ function addUser() {
 
   userName.value = "";
   userWage.value = "";
-
   save();
   render();
 }
@@ -73,11 +52,10 @@ function editUser() {
   const u = getUser();
   if (!u) return;
 
-  const name = prompt("名前", u.name);
-  const wage = prompt("時給", u.wage);
-
-  if (name) u.name = name;
-  if (wage) u.wage = Number(wage);
+  const n = prompt("名前", u.name);
+  const w = prompt("時給", u.wage);
+  if (n) u.name = n;
+  if (w) u.wage = Number(w);
 
   save();
   render();
@@ -86,7 +64,6 @@ function editUser() {
 function deleteUser() {
   const u = getUser();
   if (!u) return;
-
   if (!confirm(`${u.name} を削除しますか？`)) return;
 
   data = data.filter(x => x.id !== u.id);
@@ -108,7 +85,6 @@ function addRecord() {
     memo: memo.value || ""
   });
 
-  memo.value = "";
   save();
   render();
 }
@@ -116,7 +92,6 @@ function addRecord() {
 function deleteRecord(i) {
   const u = getUser();
   if (!u) return;
-
   u.records.splice(i, 1);
   save();
   render();
@@ -124,14 +99,13 @@ function deleteRecord(i) {
 
 // ===== 描画 =====
 function render() {
-  // 人セレクト
   userSelect.innerHTML = data
     .map(u => `<option value="${u.id}">${u.name}</option>`)
     .join("");
 
   const u = getUser();
   if (!u) {
-    recordsTable.innerHTML = "";
+    records.innerHTML = "";
     summary.innerText = "";
     viewUrl.innerText = "";
     return;
@@ -140,57 +114,61 @@ function render() {
   const month = monthSelect.value || "";
   let totalMin = 0;
 
-  recordsTable.innerHTML =
+  records.innerHTML =
     "<tr><th>日付</th><th>時間</th><th>休憩</th><th>メモ</th><th></th></tr>";
 
   u.records.forEach((r, i) => {
-    if (!inClosingMonth(r.date, month)) return;
+    if (month && !r.date.startsWith(month)) return;
 
     const work =
       Math.max(0, toMin(r.end) - toMin(r.start) - (r.break || 0));
-
     totalMin += work;
 
-    const fixed = month && u.fixedMonths[month];
+    const fixed =
+      month && u.fixedMonths && u.fixedMonths[month];
 
-    recordsTable.innerHTML += `
+    records.innerHTML += `
       <tr>
         <td>${r.date}</td>
         <td>${r.start}〜${r.end}</td>
-        <td>${r.break || 0}分</td>
-        <td>${r.memo || ""}</td>
-        <td>
-          ${fixed ? "" : `<button onclick="deleteRecord(${i})">削除</button>`}
-        </td>
+        <td>${r.break}分</td>
+        <td>${r.memo}</td>
+        <td>${fixed ? "" : `<button onclick="deleteRecord(${i})">削除</button>`}</td>
       </tr>
     `;
   });
 
-  summary.innerText =
-    `合計 ${(totalMin / 60).toFixed(2)} 時間 ／ ¥${Math.floor(
-      (totalMin / 60) * u.wage
-    )}`;
+  summary.innerText = `合計 ${(totalMin / 60).toFixed(2)} 時間`;
 
-  const baseUrl =
+  const base =
     location.origin + location.pathname.replace(/\/[^/]*$/, "/");
-  viewUrl.innerText = `${baseUrl}view.html?user=${u.id}`;
+  viewUrl.innerText = `${base}view.html?user=${u.id}`;
 }
 
-// ===== 月確定 =====
-function fixMonth() {
+// ===== 月1回確定 =====
+function finalizeMonth() {
   const u = getUser();
-  const month = monthSelect.value;
+  if (!u) return;
 
-  if (!u || !month) {
-    alert("締め月を選択してください");
+  const month = monthSelect.value;
+  if (!month) {
+    alert("月を選択してください");
     return;
   }
 
-  if (!confirm("この月を確定しますか？")) return;
+  if (!confirm(`${month} を確定しますか？`)) return;
 
   u.fixedMonths[month] = true;
   save();
-  render();
+
+  const blob = new Blob(
+    [JSON.stringify(data, null, 2)],
+    { type: "application/json" }
+  );
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "timecard.json";
+  a.click();
 }
 
 // ===== 初期化 =====
