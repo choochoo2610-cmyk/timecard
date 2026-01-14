@@ -150,31 +150,20 @@ function deleteRecord(index) {
 function renderViewUrl() {
   if (!viewUrlBox) return;
 
+  const base =
+    location.origin + location.pathname.replace("index.html", "");
+
   const u = getUser();
+
   if (!u) {
-    viewUrlBox.textContent = "";
+    viewUrlBox.textContent =
+      "スタッフを選択すると、ここに閲覧専用URLが表示されます";
     return;
   }
 
-  const base = location.origin + location.pathname.replace("index.html", "");
   const url = `${base}view.html?user=${u.id}`;
-
   viewUrlBox.textContent = url;
 }
-
-function copyViewUrl() {
-  if (!viewUrlBox) return;
-
-  const text = viewUrlBox.textContent;
-  if (!text) {
-    alert("先にスタッフを選択してください");
-    return;
-  }
-
-  navigator.clipboard.writeText(text);
-  alert("URLをコピーしました");
-}
-
 
 // ===== 描画 =====
 function render() {
