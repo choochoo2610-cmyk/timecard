@@ -13,17 +13,28 @@
 <input id="newName" placeholder="名前">
 <input id="newWage" type="number" placeholder="時給">
 <button onclick="addUser()">追加</button>
+<button onclick="deleteUser()">選択中の人を削除</button>
 
 <hr>
 
 <h3>勤務入力</h3>
-<select id="userSelect"></select><br><br>
+<select id="userSelect" onchange="renderRecords()"></select><br><br>
 
 <input id="date" type="date">
 <input id="start" type="time">
 <input id="end" type="time">
 <input id="break" type="number" placeholder="休憩(分)">
 <button onclick="addRecord()">追加</button>
+
+<h4>勤務一覧</h4>
+<table border="1">
+<thead>
+<tr>
+<th>日付</th><th>時間</th><th>休憩</th><th>操作</th>
+</tr>
+</thead>
+<tbody id="recordList"></tbody>
+</table>
 
 <hr>
 
@@ -33,8 +44,7 @@
 
 <hr>
 
-<h3>データ操作</h3>
-<button onclick="downloadJSON()">timecard.json を保存</button>
+<button onclick="downloadJSON()">timecard.json 保存</button>
 
 <pre id="log"></pre>
 
