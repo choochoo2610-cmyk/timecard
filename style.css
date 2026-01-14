@@ -1,67 +1,35 @@
 body {
-  background: #f5efe6;
-  font-family: "Hiragino Maru Gothic ProN", sans-serif;
-  padding: 16px;
+  font-family: "Segoe UI", sans-serif;
+  background: #f6f2ed;
+  padding: 10px;
 }
 
-.card {
-  max-width: 720px;
-  margin: auto;
-  background: #fffaf4;
-  padding: 20px;
-  border-radius: 14px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+h1 {
+  text-align: center;
+  color: #6b4e3d;
 }
 
-h1, h2 {
-  color: #5a3e2b;
+section {
+  background: #fff;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 12px;
 }
 
-input, select {
-  padding: 6px;
-  margin: 4px 0;
+input, select, button {
   width: 100%;
+  margin: 4px 0;
+  padding: 8px;
 }
 
 button {
-  background: #7b4f2c;
-  color: #fff;
+  background: #6b4e3d;
+  color: white;
   border: none;
-  padding: 8px 12px;
-  margin-top: 6px;
   border-radius: 8px;
-}
-
-button.sub {
-  background: #c2b0a2;
-}
-
-button.danger {
-  background: #a94442;
 }
 
 table {
   width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-
-th, td {
-  padding: 6px;
-  border-bottom: 1px solid #ddd;
-}
-
-.summary {
-  margin-top: 12px;
-  font-weight: bold;
-}
-
-.url {
   font-size: 12px;
-  word-break: break-all;
-}
-
-.row {
-  display: flex;
-  gap: 8px;
 }
