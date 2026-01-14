@@ -1,7 +1,11 @@
+// ================================
+// 勤怠管理 script.js（完全版）
+// ================================
+
 // ===== データ =====
 let data = JSON.parse(localStorage.getItem("timecard-data") || "[]");
 
-// ===== DOM取得（null防止）=====
+// ===== DOM取得 =====
 const $ = id => document.getElementById(id);
 
 const userName = $("userName");
@@ -10,6 +14,7 @@ const userSelect = $("userSelect");
 const records = $("records");
 const summary = $("summary");
 const monthlySummary = $("monthlySummary");
+const viewUrlBox = $("viewUrl");
 
 const dateInput = $("date");
 const startInput = $("start");
@@ -67,7 +72,7 @@ function isInPeriod(dateStr, start, end) {
   return d >= start && d <= end;
 }
 
-// ===== 人 =====
+// ===== スタッフ =====
 function addUser() {
   if (!userName.value || !userWage.value) return;
 
@@ -122,6 +127,12 @@ function addRecord() {
     memo: memoInput.value || ""
   });
 
+  dateInput.value = "";
+  startInput.value = "";
+  endInput.value = "";
+  breakInput.value = "";
+  memoInput.value = "";
+
   save();
   render();
 }
@@ -135,8 +146,33 @@ function deleteRecord(index) {
   render();
 }
 
+// ===== 閲覧URL =====
+function renderViewUrl() {
+  if (!viewUrlBox) return;
+
+  const u = getUser();
+  if (!u) {
+    viewUrlBox.textContent = "";
+    return;
+  }
+
+  const base = location.origin + location.pathname.replace("index.html", "");
+  const url = `${base}view.html?user=${u.id}`;
+
+  viewUrlBox.textContent = url;
+}
+
+function copyViewUrl() {
+  const text = viewUrlBox.textContent;
+  if (!text) return;
+
+  navigator.clipboard.writeText(text);
+  alert("URLをコピーしました");
+}
+
 // ===== 描画 =====
 function render() {
+  // セレクト再描画
   userSelect.innerHTML = "";
   data.forEach(u => {
     const opt = document.createElement("option");
@@ -150,6 +186,7 @@ function render() {
     records.innerHTML = "";
     summary.textContent = "";
     monthlySummary.innerHTML = "";
+    renderViewUrl();
     return;
   }
 
@@ -182,9 +219,10 @@ function render() {
     `${label}（20日締め） 合計 ${hours.toFixed(2)} 時間 / ¥${money.toLocaleString()}`;
 
   renderMonthlySummary();
+  renderViewUrl();
 }
 
-// ===== 人別給与 =====
+// ===== 人別給与一覧 =====
 function renderMonthlySummary() {
   monthlySummary.innerHTML = "";
   const { start, end } = getClosingPeriod();
@@ -194,7 +232,10 @@ function renderMonthlySummary() {
 
     u.records.forEach(r => {
       if (!isInPeriod(r.date, start, end)) return;
-      min += Math.max(0, toMin(r.end) - toMin(r.start) - (r.break || 0));
+      min += Math.max(
+        0,
+        toMin(r.end) - toMin(r.start) - (r.break || 0)
+      );
     });
 
     const h = min / 60;
@@ -206,11 +247,5 @@ function renderMonthlySummary() {
   });
 }
 
-// ===== イベント =====
-$("addUserBtn").onclick = addUser;
-$("editUserBtn").onclick = editUser;
-$("deleteUserBtn").onclick = deleteUser;
-$("addRecordBtn").onclick = addRecord;
-userSelect.onchange = render;
-
+// ===== 初期化 =====
 window.onload = render;
