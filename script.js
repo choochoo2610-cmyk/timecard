@@ -1,5 +1,5 @@
 // ================================
-// 勤怠管理 script.js（完全版）
+// 勤怠管理 script.js（最終安定版）
 // ================================
 
 // ===== データ =====
@@ -96,8 +96,8 @@ function editUser() {
   const name = prompt("名前", u.name);
   const wage = prompt("時給", u.wage);
 
-  if (name !== null && name !== "") u.name = name;
-  if (wage !== null && wage !== "") u.wage = Number(wage);
+  if (name) u.name = name;
+  if (wage) u.wage = Number(wage);
 
   save();
   render();
@@ -161,13 +161,25 @@ function renderViewUrl() {
     return;
   }
 
-  const url = `${base}view.html?user=${u.id}`;
-  viewUrlBox.textContent = url;
+  viewUrlBox.textContent = `${base}view.html?user=${u.id}`;
+}
+
+function copyViewUrl() {
+  if (!viewUrlBox) return;
+
+  const text = viewUrlBox.textContent;
+  if (!text || text.includes("スタッフを選択")) {
+    alert("スタッフを選択してください");
+    return;
+  }
+
+  navigator.clipboard.writeText(text);
+  alert("URLをコピーしました");
 }
 
 // ===== 描画 =====
 function render() {
-  const selectedId = userSelect.value; // ★今の選択を保存
+  const selectedId = userSelect.value;
 
   userSelect.innerHTML = "";
   data.forEach(u => {
@@ -177,26 +189,22 @@ function render() {
     userSelect.appendChild(opt);
   });
 
-  // ★ 選択を復元（なければ最初の人）
   if (selectedId) {
     userSelect.value = selectedId;
   } else if (data.length > 0) {
     userSelect.value = data[0].id;
   }
 
+  const { start, end, label } = getClosingPeriod();
+  summary.textContent = `${label}（20日締め）`;
+
   const u = getUser();
   if (!u) {
     records.innerHTML = "";
-    summary.textContent = "";
     monthlySummary.innerHTML = "";
     renderViewUrl();
     return;
   }
-
-  // ↓ 以降は今まで通り
-
-
-  const { start, end, label } = getClosingPeriod();
 
   let totalMin = 0;
   records.innerHTML =
@@ -228,14 +236,13 @@ function render() {
   renderViewUrl();
 }
 
-// ===== 人別給与一覧 =====
+// ===== 人別給与 =====
 function renderMonthlySummary() {
   monthlySummary.innerHTML = "";
   const { start, end } = getClosingPeriod();
 
   data.forEach(u => {
     let min = 0;
-
     u.records.forEach(r => {
       if (!isInPeriod(r.date, start, end)) return;
       min += Math.max(
