@@ -99,20 +99,30 @@ function deleteRecord(i) {
 
 // ===== 描画 =====
 function render() {
+  // ★ 今選ばれている人を保持
+  const selectedId = userSelect.value;
+
+  // ★ select を作り直す
   userSelect.innerHTML = data
     .map(u => `<option value="${u.id}">${u.name}</option>`)
     .join("");
+
+  // ★ さっき選んでた人がいれば戻す
+  if (selectedId && data.some(u => String(u.id) === selectedId)) {
+    userSelect.value = selectedId;
+  }
 
   const u = getUser();
   if (!u) {
     records.innerHTML = "";
     summary.innerText = "";
+    history.innerHTML = "";
     viewUrl.innerText = "";
     return;
   }
 
-  const month = monthSelect.value || "";
   let totalMin = 0;
+  const month = monthSelect.value;
 
   records.innerHTML =
     "<tr><th>日付</th><th>時間</th><th>休憩</th><th>メモ</th><th></th></tr>";
@@ -124,26 +134,24 @@ function render() {
       Math.max(0, toMin(r.end) - toMin(r.start) - (r.break || 0));
     totalMin += work;
 
-    const fixed =
-      month && u.fixedMonths && u.fixedMonths[month];
-
     records.innerHTML += `
       <tr>
         <td>${r.date}</td>
         <td>${r.start}〜${r.end}</td>
         <td>${r.break}分</td>
         <td>${r.memo}</td>
-        <td>${fixed ? "" : `<button onclick="deleteRecord(${i})">削除</button>`}</td>
+        <td><button onclick="deleteRecord(${i})">削除</button></td>
       </tr>
     `;
   });
 
   summary.innerText = `合計 ${(totalMin / 60).toFixed(2)} 時間`;
 
-  const base =
+  const baseUrl =
     location.origin + location.pathname.replace(/\/[^/]*$/, "/");
-  viewUrl.innerText = `${base}view.html?user=${u.id}`;
+  viewUrl.innerText = `${baseUrl}view.html?user=${u.id}`;
 }
+
 
 // ===== 月1回確定 =====
 function finalizeMonth() {
