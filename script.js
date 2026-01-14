@@ -1,6 +1,12 @@
 // ===== データ =====
 let data = JSON.parse(localStorage.getItem("timecard-data") || "[]");
 
+// ★ 既存データ救済（超重要）
+data.forEach(u => {
+  if (!u.fixedMonths) u.fixedMonths = {};
+  if (!Array.isArray(u.records)) u.records = [];
+});
+
 // ===== DOM =====
 const userName = document.getElementById("userName");
 const userWage = document.getElementById("userWage");
@@ -26,12 +32,15 @@ function getUser() {
 }
 
 function toMin(t) {
+  if (!t) return 0;
   const [h, m] = t.split(":").map(Number);
   return h * 60 + m;
 }
 
-// ===== 20日締め判定 =====
+// ===== 20日締め =====
 function inClosingMonth(dateStr, monthStr) {
+  if (!monthStr) return true;
+
   const [y, m] = monthStr.split("-").map(Number);
   const d = new Date(dateStr);
 
@@ -55,6 +64,7 @@ function addUser() {
 
   userName.value = "";
   userWage.value = "";
+
   save();
   render();
 }
@@ -76,6 +86,7 @@ function editUser() {
 function deleteUser() {
   const u = getUser();
   if (!u) return;
+
   if (!confirm(`${u.name} を削除しますか？`)) return;
 
   data = data.filter(x => x.id !== u.id);
@@ -86,7 +97,8 @@ function deleteUser() {
 // ===== 勤務 =====
 function addRecord() {
   const u = getUser();
-  if (!u || !dateInput.value) return;
+  if (!u) return;
+  if (!dateInput.value || !startInput.value || !endInput.value) return;
 
   u.records.push({
     date: dateInput.value,
@@ -96,6 +108,7 @@ function addRecord() {
     memo: memo.value || ""
   });
 
+  memo.value = "";
   save();
   render();
 }
@@ -111,108 +124,74 @@ function deleteRecord(i) {
 
 // ===== 描画 =====
 function render() {
-  userSelect.innerHTML = data.map(u =>
-    `<option value="${u.id}">${u.name}</option>`
-  ).join("");
+  // 人セレクト
+  userSelect.innerHTML = data
+    .map(u => `<option value="${u.id}">${u.name}</option>`)
+    .join("");
 
   const u = getUser();
-  if (!u) return;
+  if (!u) {
+    recordsTable.innerHTML = "";
+    summary.innerText = "";
+    viewUrl.innerText = "";
+    return;
+  }
 
-  const month = monthSelect.value;
+  const month = monthSelect.value || "";
   let totalMin = 0;
 
   recordsTable.innerHTML =
     "<tr><th>日付</th><th>時間</th><th>休憩</th><th>メモ</th><th></th></tr>";
 
   u.records.forEach((r, i) => {
-    if (month && !inClosingMonth(r.date, month)) return;
+    if (!inClosingMonth(r.date, month)) return;
 
-    const work = Math.max(
-      0,
-      toMin(r.end) - toMin(r.start) - (r.break || 0)
-    );
+    const work =
+      Math.max(0, toMin(r.end) - toMin(r.start) - (r.break || 0));
 
     totalMin += work;
+
+    const fixed = month && u.fixedMonths[month];
 
     recordsTable.innerHTML += `
       <tr>
         <td>${r.date}</td>
         <td>${r.start}〜${r.end}</td>
-        <td>${r.break}分</td>
-        <td>${r.memo}</td>
+        <td>${r.break || 0}分</td>
+        <td>${r.memo || ""}</td>
         <td>
-          ${u.fixedMonths[month] ? "" : `<button onclick="deleteRecord(${i})">削除</button>`}
+          ${fixed ? "" : `<button onclick="deleteRecord(${i})">削除</button>`}
         </td>
-      </tr>`;
+      </tr>
+    `;
   });
 
   summary.innerText =
-    `合計 ${(totalMin / 60).toFixed(2)} 時間 ／ ¥${Math.floor((totalMin / 60) * u.wage)}`;
+    `合計 ${(totalMin / 60).toFixed(2)} 時間 ／ ¥${Math.floor(
+      (totalMin / 60) * u.wage
+    )}`;
 
-  const baseUrl = location.origin + location.pathname.replace(/\/[^/]*$/, "/");
+  const baseUrl =
+    location.origin + location.pathname.replace(/\/[^/]*$/, "/");
   viewUrl.innerText = `${baseUrl}view.html?user=${u.id}`;
 }
 
 // ===== 月確定 =====
 function fixMonth() {
   const u = getUser();
-  if (!u || !monthSelect.value) return;
+  const month = monthSelect.value;
+
+  if (!u || !month) {
+    alert("締め月を選択してください");
+    return;
+  }
 
   if (!confirm("この月を確定しますか？")) return;
 
-  u.fixedMonths[monthSelect.value] = true;
+  u.fixedMonths[month] = true;
   save();
   render();
 }
 
-// ===== PDF給与明細 =====
-function exportUserMonth() {
-  const u = getUser();
-  const month = monthSelect.value;
-  if (!u || !month || !u.fixedMonths[month]) {
-    alert("先に月を確定してください");
-    return;
-  }
-
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF();
-
-  let y = 20;
-  let totalMin = 0;
-
-  pdf.text(`給与明細`, 20, y);
-  y += 10;
-  pdf.text(`氏名：${u.name}`, 20, y);
-  y += 10;
-  pdf.text(`対象月：${month}（20日締め）`, 20, y);
-  y += 10;
-
-  u.records.forEach(r => {
-    if (!inClosingMonth(r.date, month)) return;
-
-    const work = Math.max(
-      0,
-      toMin(r.end) - toMin(r.start) - (r.break || 0)
-    );
-    totalMin += work;
-
-    pdf.text(
-      `${r.date} ${r.start}-${r.end} 休憩${r.break}分`,
-      20,
-      y
-    );
-    y += 8;
-  });
-
-  const hours = (totalMin / 60).toFixed(2);
-  const pay = Math.floor(hours * u.wage);
-
-  y += 10;
-  pdf.text(`労働時間：${hours} 時間`, 20, y);
-  y += 10;
-  pdf.text(`支給額：¥${pay}`, 20, y);
-
-  pdf.save(`${u.name}_${month}_給与明細.pdf`);
-}
-
+// ===== 初期化 =====
 window.onload = render;
