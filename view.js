@@ -59,3 +59,23 @@ fetch("./timecard.json")
     document.body.innerHTML = "データを読み込めません";
     console.error(err);
   });
+function downloadPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  const name = document.getElementById("name").innerText;
+  const month = document.getElementById("month").innerText;
+  const total = document.getElementById("total").innerText;
+  const money = document.getElementById("money").innerText;
+
+  doc.setFontSize(18);
+  doc.text("給与明細", 20, 20);
+
+  doc.setFontSize(12);
+  doc.text(`氏名：${name}`, 20, 40);
+  doc.text(`対象月：${month}`, 20, 55);
+  doc.text(`勤務時間：${total}`, 20, 70);
+  doc.text(`支給額：${money}`, 20, 85);
+
+  doc.save(`${name}_給与明細.pdf`);
+}
