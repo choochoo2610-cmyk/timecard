@@ -4,42 +4,43 @@
   <meta charset="UTF-8">
   <title>タイムカード管理</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
-
-  <!-- PDF用（cdn / GitHub Pages対応） -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
-<h1>☕ タイムカード管理</h1>
+<h1>タイムカード管理</h1>
 
 <section>
-  <h2>スタッフ追加</h2>
-  <input id="userName" placeholder="名前">
-  <input id="userWage" type="number" placeholder="時給">
+  <h2>人の追加</h2>
+  名前 <input id="userName">
+  時給 <input id="userWage" type="number">
   <button onclick="addUser()">追加</button>
 </section>
 
 <section>
-  <h2>スタッフ選択</h2>
+  <h2>人の選択</h2>
   <select id="userSelect" onchange="render()"></select>
   <button onclick="editUser()">編集</button>
   <button onclick="deleteUser()">削除</button>
 </section>
 
 <section>
-  <h2>締め月（20日締め）</h2>
+  <h2>月</h2>
   <input type="month" id="monthSelect" onchange="render()">
 </section>
 
 <section>
   <h2>勤務入力</h2>
-  <input type="date" id="date">
-  <input type="time" id="start">
-  <input type="time" id="end">
-  <input type="number" id="breakTime" placeholder="休憩(分)">
-  <input id="memo" placeholder="メモ">
+  日付 <input type="date" id="date"><br>
+  出勤 <input type="time" id="start">
+  退勤 <input type="time" id="end"><br>
+  休憩 <input type="number" id="breakTime" value="0"> 分<br>
+  メモ <input id="memo"><br>
   <button onclick="addRecord()">保存</button>
+</section>
+
+<section>
+  <h2>今月の合計</h2>
+  <div id="summary"></div>
 </section>
 
 <section>
@@ -48,21 +49,15 @@
 </section>
 
 <section>
-  <h2>集計</h2>
-  <div id="summary"></div>
-</section>
-
-<section>
-  <h2>月次確定</h2>
-  <button onclick="fixMonth()">今月を確定</button>
-  <button onclick="exportUserMonth()">個人別PDF給与明細</button>
-</section>
-
-<section>
-  <h2>閲覧用URL</h2>
+  <h2>閲覧URL</h2>
   <div id="viewUrl"></div>
 </section>
 
-<script src="script.js"></script>
+<section>
+  <h2>月1回の確定</h2>
+  <button onclick="finalizeMonth()">今月を確定（JSON出力）</button>
+</section>
+
+<script src="./script.js"></script>
 </body>
 </html>
