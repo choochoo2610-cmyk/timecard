@@ -15,7 +15,6 @@ const records = $("records");
 const summary = $("summary");
 const monthlySummary = $("monthlySummary");
 const viewUrlBox = $("viewUrl");
-
 const dateInput = $("date");
 const startInput = $("start");
 const endInput = $("end");
