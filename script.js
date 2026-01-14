@@ -163,12 +163,18 @@ function renderViewUrl() {
 }
 
 function copyViewUrl() {
+  if (!viewUrlBox) return;
+
   const text = viewUrlBox.textContent;
-  if (!text) return;
+  if (!text) {
+    alert("先にスタッフを選択してください");
+    return;
+  }
 
   navigator.clipboard.writeText(text);
   alert("URLをコピーしました");
 }
+
 
 // ===== 描画 =====
 function render() {
