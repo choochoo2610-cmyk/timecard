@@ -140,3 +140,14 @@ function downloadJSON() {
 function log(msg) {
   document.getElementById("log").textContent = msg;
 }
+function copyViewUrl() {
+  const u = currentUser();
+  if (!u) return;
+
+  const base =
+    location.origin + location.pathname.replace("index.html", "");
+  const url = `${base}view.html?user=${u.id}`;
+
+  navigator.clipboard.writeText(url);
+  document.getElementById("viewUrl").textContent = url;
+}
