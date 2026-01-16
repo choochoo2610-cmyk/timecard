@@ -1,5 +1,5 @@
 // ================================
-// 勤怠管理 script.js（最終安定版）
+// 勤怠管理 script.js（2ヶ月表示対応）
 // ================================
 
 // ===== データ =====
@@ -37,7 +37,7 @@ function getUser() {
   return data.find(u => String(u.id) === userSelect.value);
 }
 
-// ===== 20日締め =====
+// ===== 20日締め（今月） =====
 function getClosingPeriod() {
   const now = new Date();
   const y = now.getFullYear();
@@ -56,6 +56,34 @@ function getClosingPeriod() {
     end = new Date(y, m + 1, 20);
     labelYear = m === 11 ? y + 1 : y;
     labelMonth = m === 11 ? 1 : m + 2;
+  }
+
+  return {
+    start,
+    end,
+    label: `${labelYear}-${String(labelMonth).padStart(2, "0")}`
+  };
+}
+
+// ===== 20日締め（先月） =====
+function getLastClosingPeriod() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth();
+  const d = now.getDate();
+
+  let start, end, labelYear, labelMonth;
+
+  if (d <= 20) {
+    start = new Date(y, m - 2, 21);
+    end = new Date(y, m - 1, 20);
+    labelYear = m === 0 ? y - 1 : y;
+    labelMonth = m === 0 ? 12 : m;
+  } else {
+    start = new Date(y, m - 1, 21);
+    end = new Date(y, m, 20);
+    labelYear = y;
+    labelMonth = m + 1;
   }
 
   return {
@@ -194,8 +222,8 @@ function render() {
     userSelect.value = data[0].id;
   }
 
-  const { start, end, label } = getClosingPeriod();
-  summary.textContent = `${label}（20日締め）`;
+  const current = getClosingPeriod();
+  summary.textContent = `${current.label}（20日締め）`;
 
   const u = getUser();
   if (!u) {
@@ -205,37 +233,58 @@ function render() {
     return;
   }
 
-  let totalMin = 0;
-  records.innerHTML =
-    "<tr><th>日付</th><th>時間</th><th>休憩</th><th></th></tr>";
+  records.innerHTML = "";
 
-  u.records.forEach((r, i) => {
-    if (!isInPeriod(r.date, start, end)) return;
-
-    const work =
-      Math.max(0, toMin(r.end) - toMin(r.start) - (r.break || 0));
-    totalMin += work;
-
+  function renderTable(title, period) {
     records.innerHTML += `
+      <tr><th colspan="4">${title}</th></tr>
       <tr>
-        <td>${r.date}</td>
-        <td>${r.start}〜${r.end}</td>
-        <td>${r.break}</td>
-        <td><button onclick="deleteRecord(${i})">削除</button></td>
-      </tr>`;
+        <th>日付</th>
+        <th>時間</th>
+        <th>休憩</th>
+        <th></th>
+      </tr>
+    `;
+
+    u.records.forEach((r, i) => {
+      if (!isInPeriod(r.date, period.start, period.end)) return;
+
+      records.innerHTML += `
+        <tr>
+          <td>${r.date}</td>
+          <td>${r.start}〜${r.end}</td>
+          <td>${r.break}</td>
+          <td><button onclick="deleteRecord(${i})">削除</button></td>
+        </tr>`;
+    });
+  }
+
+  const last = getLastClosingPeriod();
+
+  renderTable(`今月（${current.label}）`, current);
+  renderTable(`先月（${last.label}）`, last);
+
+  // 合計（今月のみ）
+  let totalMin = 0;
+  u.records.forEach(r => {
+    if (!isInPeriod(r.date, current.start, current.end)) return;
+    totalMin += Math.max(
+      0,
+      toMin(r.end) - toMin(r.start) - (r.break || 0)
+    );
   });
 
   const hours = totalMin / 60;
   const money = Math.floor(hours * u.wage);
 
   summary.textContent =
-    `${label}（20日締め） 合計 ${hours.toFixed(2)} 時間 / ¥${money.toLocaleString()}`;
+    `${current.label}（20日締め） 合計 ${hours.toFixed(2)} 時間 / ¥${money.toLocaleString()}`;
 
   renderMonthlySummary();
   renderViewUrl();
 }
 
-// ===== 人別給与 =====
+// ===== 人別給与（今月） =====
 function renderMonthlySummary() {
   monthlySummary.innerHTML = "";
   const { start, end } = getClosingPeriod();
@@ -258,6 +307,7 @@ function renderMonthlySummary() {
     monthlySummary.appendChild(div);
   });
 }
+
 // ===== JSON書き出し =====
 function exportJson() {
   if (!data || data.length === 0) {
